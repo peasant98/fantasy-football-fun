@@ -62,16 +62,6 @@ class PRFQuery():
 
         self.draft_pos_string = "".join([f"&draft_pos[]={pos}" for pos in self.draft_positions])
         self.query_string = f"{self.standard_string}{self.pos_string}{self.draft_pos_string}"
-        """
-
-
-            p&c5val=1.0&order_by=pass_adj_yds_per_att
-
-
-
-
-        """
-
 
     def validate_list(self, const_list, user_list):
         provided_wrong_vals = 0 == len(set(user_list) - set(const_list))
