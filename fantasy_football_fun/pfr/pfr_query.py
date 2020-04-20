@@ -16,6 +16,7 @@ class PRFQuery():
                  is_hof=None,
                  draft_positions=["qb", "wr", "te", "rb"],
                  order_by="pass_td", offset=0, order_by_asc=False):
+        
         self.base_string = "https://www.pro-football-reference.com/play-index/psl_finder.cgi?request=1&match=single"
         self.year_start, self.year_end = self.validate_range(year_start, year_end)
         self.season_start, self.season_end = self.validate_range(season_start, season_end)
@@ -39,6 +40,7 @@ class PRFQuery():
         else:
             self.positions = positions
         self.is_hof_string = ""
+
         if is_hof is not None:
             self.is_hof_string = "Y" if is_hof else "N"
 
