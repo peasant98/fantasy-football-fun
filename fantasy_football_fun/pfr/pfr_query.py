@@ -6,15 +6,15 @@ for what search terms they want.
 import fantasy_football_fun.const as C
 
 
-class PRFQuery():
+class PFRQuery():
     def __init__(self, year_start=2000, year_end=2019, season_start=1,
                  season_end=-1, age_min=18, age_max=48,
-                 positions=["qb", "wr", "te", "rb"],
+                 positions=C.POSITIONS,
                  draft_year_min=1936, draft_year_max=2019,
                  draft_slot_min=1, draft_slot_max=500,
                  draft_pick_in_round="pick_overall",
                  is_hof=None,
-                 draft_positions=["qb", "wr", "te", "rb"],
+                 draft_positions=C.POSITIONS,
                  order_by="pass_td", offset=0, order_by_asc=False):
 
         self.base_string = "https://www.pro-football-reference.com/play-index/psl_finder.cgi?request=1&match=single"
@@ -56,7 +56,7 @@ class PRFQuery():
                                f"{self.draft_year_max}&draft_slot_min=" \
                                f"{self.draft_slot_min}&draft_slot_max=" \
                                f"{self.draft_slot_max}&draft_pick_in_round=" \
-                               f"pick_overall&conference=any&c5val=1.0%&order_by=" \
+                               f"pick_overall&conference=any&c5val=1.0&order_by=" \
                                f"{self.order_by}"
         # positions to look on
         self.pos_string = "".join([f"&pos[]={pos}" for pos in self.positions])
@@ -65,18 +65,21 @@ class PRFQuery():
         self.query_string = f"{self.standard_string}{self.pos_string}{self.draft_pos_string}"
 
     def get_table(self):
+        """
+        to be done - get the whole table of data.
+
+        # Parameters:
+        """
+        # use self.query string to scrape and get the actual table
         print(self.query_string)
 
     def validate__item_in_list(self, master_list, user_item):
-        print(user_item, master_list)
         if user_item not in master_list:
             raise ValueError("Wrong vaues supplied! Please refer to const.py.")
         else:
             return user_item
 
     def validate_list(self, const_list, user_list):
-        print(user_list)
-        print(const_list)
         wrong_vals_amt = len(set(user_list) - set(const_list))
         if wrong_vals_amt > 0:
             raise ValueError("Wrong vaues supplied! Please refer to const.py.")
@@ -96,6 +99,3 @@ class PRFQuery():
 # request=1&match=single&year_min=2019&year_max=2019&
 # season_start=1&season_end=-1&pos%5B%5D=qb&pos%5B%5D=rb&pos%5B%5D=wr&pos%5B%5D=te&pos%5B%5D=e&pos%5B%5D=t&pos%5B%5D=g&pos%5B%5D=c&pos%5B%5D=ol&pos%5B%5D=dt&pos%5B%5D=de&pos%5B%5D=dl&pos%5B%5D=ilb&pos%5B%5D=olb&pos%5B%5D=lb&pos%5B%5D=cb&pos%5B%5D=s&pos%5B%5D=db&pos%5B%5D=k&pos%5B%5D=p&draft_year_min=1936&draft_year_max=2019&draft_slot_min=1&draft_slot_max=500&draft_pick_in_round=pick_overall&conference=any&draft_pos%5B%5D=qb&draft_pos%5B%5D=rb&draft_pos%5B%5D=wr&draft_pos%5B%5D=te&draft_pos%5B%5D=e&draft_pos%5B%5D=t&draft_pos%5B%5D=g&draft_pos%5B%5D=c&draft_pos%5B%5D=ol&draft_pos%5B%5D=dt&draft_pos%5B%5D=de&draft_pos%5B%5D=dl&draft_pos%5B%5D=ilb&draft_pos%5B%5D=olb&draft_pos%5B%5D=lb&draft_pos%5B%5D=cb&draft_pos%5B%5D=s&draft_pos%5B%5D=db&draft_pos%5B%5D=k&draft_pos%5B%5D=p&c5val=1.0&order_by=pass_td
 
-
-if __name__ == '__main__':
-    x = PRFQuery()
