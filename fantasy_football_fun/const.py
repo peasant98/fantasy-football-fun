@@ -21,3 +21,4 @@ ORDER_BY_TERMS = ["player", "year_id", "age",
                   "rec_yds", "scoring", "fantasy_points", "sacks",
                   "seasons"]
 MAX_FF_POINTS_VAL = 35850
+BASE_URL = 'https://www.pro-football-reference.com'

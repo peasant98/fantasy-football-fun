@@ -63,6 +63,29 @@ class FantasyFootballDataset(Dataset):
 # using dense layer is crucial here to predict
 # lstm layer is a feature layer, need dense layer for probability
 # distribution
+
+class FantasyFootballLSTM(nn.Module):
+    """
+    
+    """
+    def __init__(self, input_dim, hidden_dim):
+        super(FantasyFootballLSTM, self).__init__()
+        # 2 stacked lstm
+        # many folks use softmax to predict token, not whole vector
+        self.lstm = nn.LSTM(input_dim, hidden_dim, 2)
+        self.fc = nn.Linear(hidden_dim, 10)
+
+    def forward(self, x):
+        x = self.lstm(x, hidden)
+        x = self.fc(x[0])
+
+        return x
+
+
+class FantasyFootballModel():
+    def __init__(self):
+        super().__init__()
+
 class MidiLSTM(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(MidiLSTM, self).__init__()

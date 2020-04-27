@@ -29,9 +29,6 @@ def create_data():
     final_df = pd.concat(dfs)
     final_df.to_csv("players.csv")
 
-# make sure to
-#  rerun things
-
 
 if __name__ == '__main__':
     create_data()
