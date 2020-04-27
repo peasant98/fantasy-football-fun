@@ -16,7 +16,7 @@ def create_data():
     dfs = []
     while True:
         query.offset = offset
-        time.sleep(2)
+        time.sleep(1)
         df = query.table
         if df is not None:
             dfs.append(df)

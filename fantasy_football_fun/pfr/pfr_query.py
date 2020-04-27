@@ -91,6 +91,7 @@ class PFRQuery():
         soup = BeautifulSoup(html, 'html.parser')
         headers = []
         all_players_info = []
+        player_links = []
         theads = soup.find_all('thead')
         if len(theads) == 0:
             return None
@@ -129,10 +130,16 @@ class PFRQuery():
                     except Exception as e:
                         # failed to convert. go with string instead
                         val = str(val)
+                        if td['data-stat'] == 'player':
+                            links = td.find_all("a")
+                            if len(links) != 0:
+                                link = links[0]['href']
+                                player_links.append(link)
                     player_info.append(val)
                 # an actual player exists here.
                 all_players_info.append(player_info)
         df = pd.DataFrame(all_players_info, columns=headers)
+        df['link'] = pd.Series(player_links, index=df.index)
         return df
 
     def validate__item_in_list(self, master_list, user_item):
