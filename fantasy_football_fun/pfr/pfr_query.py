@@ -4,6 +4,9 @@ for what search terms they want.
 
 """
 import fantasy_football_fun.const as C
+import requests
+import pandas as pd
+from bs4 import BeautifulSoup
 
 
 class PFRQuery():
@@ -37,11 +40,10 @@ class PFRQuery():
         self.order_by = self.validate__item_in_list(C.ORDER_BY_TERMS, order_by)
 
         self.is_hof_string = ""
-
+        self.offset = 0
         if is_hof is not None:
             self.is_hof_string = "Y" if is_hof else "N"
         self.construct_query_string()
-        print(self.query_string)
 
     def construct_query_string(self):
         """
@@ -62,16 +64,76 @@ class PFRQuery():
         self.pos_string = "".join([f"&pos[]={pos}" for pos in self.positions])
         # positions drafted at
         self.draft_pos_string = "".join([f"&draft_pos[]={pos}" for pos in self.draft_positions])
-        self.query_string = f"{self.standard_string}{self.pos_string}{self.draft_pos_string}"
+        self.base_string = f"{self.standard_string}{self.pos_string}{self.draft_pos_string}"
+        self.query_string = self.base_string
 
-    def get_table(self):
+    @property
+    def offset(self):
+        return self._offset
+
+    @offset.setter
+    def offset(self, offset):
+        """
+        Adds an offset to a string
+        """
+        self._offset = offset
+        self.query_string = f'{self.base_string}&offset={self.offset}'
+
+    @property
+    def table(self):
         """
         to be done - get the whole table of data.
 
         # Parameters:
         """
-        # use self.query string to scrape and get the actual table
-        print(self.query_string)
+        response = requests.get(self.query_string)
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+        headers = []
+        all_players_info = []
+        theads = soup.find_all('thead')
+        if len(theads) == 0:
+            return None
+
+        thead = theads[0]
+
+        trs = thead.find_all('tr')
+        if len(trs) < 2:
+            return None
+
+        ths = trs[1].find_all('th')
+        for th in ths:
+            headers.append(str(th.text))
+
+        tbody = soup.find_all('tbody')[0]
+        # also length 1
+        trs = tbody.find_all('tr')
+        # every player in the table
+        for tr in trs:
+            rank = tr.find_all('th')[0].text
+            if rank == "Rk":
+                pass
+            else:
+                player_info = [int(rank)]
+                tds = tr.find_all("td")
+                for td in tds:
+                    # each column, e.g., fantasy points
+                    if td.text is None:
+                        val = -1
+                    else:
+                        val = td.text
+                    try:
+                        val = float(val)
+                        if val == int(val):
+                            val = int(val)
+                    except Exception as e:
+                        # failed to convert. go with string instead
+                        val = str(val)
+                    player_info.append(val)
+                # an actual player exists here.
+                all_players_info.append(player_info)
+        df = pd.DataFrame(all_players_info, columns=headers)
+        return df
 
     def validate__item_in_list(self, master_list, user_item):
         if user_item not in master_list:

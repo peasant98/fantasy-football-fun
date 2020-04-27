@@ -17,5 +17,6 @@ ORDER_BY_TERMS = ["player", "year_id", "age",
                   "pass_td", "pass_int", "pass_int_td",
                   "pass_td_perc", "pass_int_perc", "pass_rating",
                   "pass_sacked", "pass_sacked_yds", "pass_sacked_perc",
-                  "pass_yds_per_att", "pass_adj_yds_per_att"]
-
+                  "pass_yds_per_att", "pass_adj_yds_per_att", "rush_yds",
+                  "rec_yds", "scoring", "fantasy_points", "sacks",
+                  "seasons"]
