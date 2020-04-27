@@ -20,3 +20,4 @@ ORDER_BY_TERMS = ["player", "year_id", "age",
                   "pass_yds_per_att", "pass_adj_yds_per_att", "rush_yds",
                   "rec_yds", "scoring", "fantasy_points", "sacks",
                   "seasons"]
+MAX_FF_POINTS_VAL = 35850

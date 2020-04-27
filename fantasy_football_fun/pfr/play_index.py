@@ -6,6 +6,7 @@ football reference.
 """
 
 from fantasy_football_fun.pfr.pfr_query import PFRQuery
+import fantasy_football_fun.const as C
 import pandas as pd
 import time
 
@@ -18,13 +19,13 @@ def create_data():
         query.offset = offset
         time.sleep(1)
         df = query.table
-        if df is not None:
-            dfs.append(df)
-        else:
-            break
+        dfs.append(df)
         inc = offset + 100
         print(f"Got players {offset} to {inc}")
         offset += len(df)
+        if offset > C.MAX_FF_POINTS_VAL:
+            print("Enough data obtained!")
+            break
     final_df = pd.concat(dfs)
     final_df.to_csv("players.csv")
 
