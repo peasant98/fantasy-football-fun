@@ -17,6 +17,32 @@ from fantasy_football_fun.pfr import FFDataset
 # distribution
 
 
+class ModifiedFantasyFootballLSTM(nn.Module):
+    """
+    LSTM model for fantasy football data. Data from positions
+    is used before being fed into the LSTM.
+    """
+    def __init__(self, input_dim, hidden_dim, fc1_dim=64, categories=5):
+        super(ModifiedFantasyFootballLSTM, self).__init__()
+        # 2 stacked lstm
+        # many folks use softmax to predict token, not whole vector
+        self.embedding = nn.Embedding(categories, 2)
+        self.position_fc = nn.Linear(2, 1)
+        self.lstm = nn.LSTM(input_dim, hidden_dim, 1)
+        self.fc1 = nn.Linear(hidden_dim, 1)
+
+    def forward(self, x, hidden, pos):
+        # x2 = self.embedding(pos.type(torch.LongTensor).cuda())
+        # x2 = F.relu(self.position_fc(x2))
+
+        # x2 = torch.flatten(x2)
+        # x = torch.add(x, x2)
+        x1 = self.lstm(x, hidden)
+        x1 = F.relu(self.fc1(x1[0]))
+        # print(x1)
+        return (x1)
+
+
 class FantasyFootballLSTM(nn.Module):
     """
     LSTM model for fantasy football data.
@@ -25,7 +51,7 @@ class FantasyFootballLSTM(nn.Module):
         super(FantasyFootballLSTM, self).__init__()
         # 2 stacked lstm
         # many folks use softmax to predict token, not whole vector
-        self.lstm = nn.LSTM(input_dim, hidden_dim, 2)
+        self.lstm = nn.LSTM(input_dim, hidden_dim)
         self.fc1 = nn.Linear(hidden_dim, fc1_dim)
         self.fc2 = nn.Linear(fc1_dim, 128)
         self.embedding = nn.Embedding(categories, 3)
@@ -34,109 +60,88 @@ class FantasyFootballLSTM(nn.Module):
 
     def forward(self, x, hidden, pos):
         x1 = self.lstm(x, hidden)
-        x1 = self.fc1(x1[0])
-        x1 = self.fc2(x1)
+        x1 = F.relu(self.fc1(x1[0]))
+        x1 = F.relu(self.fc2(x1))
         x2 = self.embedding(pos.type(torch.LongTensor).cuda())
         x2 = torch.flatten(x2)
-        x2 = self.position_fc(x2)
+        x2 = F.relu(self.position_fc(x2))
 
         x3 = torch.add(x1, x2)
-        return self.fc3(x3)
+        return nn.Sigmoid()(self.fc3(x3))
 
-
-# class FantasyFootballModel():
-#     def __init__(self):
-#         super().__init__()
-
-# class MidiLSTM(nn.Module):
-#     def __init__(self, input_dim, hidden_dim):
-#         super(MidiLSTM, self).__init__()
-#         # 2 stacked lstm
-#         # many folks use softmax to predict token, not whole vector
-#         # self.word_embeddings = nn.Embedding(vocab_size, embedding_dim)
-
-#         self.lstm = nn.LSTM(input_dim, hidden_dim, 2)
-#         self.fc = nn.Linear(hidden_dim, 128)
-
-#     def forward(self, x, hidden):
-#         x = self.lstm(x, hidden)
-#         x = self.fc(x[0])
-
-#         return x
 
 # # embed to EMBEDDING_DIM dimension vectors
 # # adding reduction="sum" will be make gradient updates more extreme
-# loss_function = nn.BCEWithLogitsLoss()
-# model = MidiLSTM(128, 256)
-# optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-# md = MidiDataset("bach")
-
-# # input is (num of sequences, batch size, time step)
-# model.cuda()
-# for epoch in range(50):
-#     print("Epoch", epoch)
-#     vals = list(range(len(md)))
-#     np.random.shuffle(vals) 
-#     for i, val in enumerate(vals):
-#         hidden = (torch.randn(2, 1, 256).cuda(), torch.randn(2, 1, 256).cuda())
-#         # values in dataset
-#         optimizer.zero_grad()
-#         pianoroll = md[i][:-1]
-#         target = md[i][1:]
-
-
-#         x = pianoroll.view(-1, 1, 128).cuda()
-#         target = target.view(-1, 1, 128).cuda()
-#         output = model(x, hidden)
-#         loss = loss_function(output, target)
-#         loss.backward(retain_graph=True)
-#         if i % 10 == 0:
-#             print("Loss:", loss.item())
-#         optimizer.step()
 
 if __name__ == '__main__':
     dataset = FFDataset.FantasyFootballDataset("../finalized_players.csv", normalize=True)
-    print(dataset[1])
-    # exit()
 
-    career, pos_vec = dataset[1]
-
-    model = FantasyFootballLSTM(1, 128)
+    data_len = len(dataset)
+    train_length = int(data_len * 0.9)
+    test_length = data_len - train_length
+    train_set, test_set = torch.utils.data.random_split(dataset, [train_length, test_length])
+    model = ModifiedFantasyFootballLSTM(1, 128)
     model.cuda()
-    hidden = (torch.randn(2, 1, 128).cuda(), torch.randn(2, 1, 128).cuda())
-    mycareer = career.view(-1, 1, 1)
-    out = model(mycareer, hidden, pos_vec)
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     loss_function = nn.MSELoss()
+    total_epoch_train_losses = []
+    total_epoch_test_losses = []
     for epoch in range(50):
         if epoch % 10 == 0:
-            torch.save(model.state_dict(), f"thirdmodel_{epoch}")
+            torch.save(model.state_dict(), f"eighthmodel_{epoch}")
         losses = []
         print(f"NEW EPOCH {epoch}")
-        vals = list(range(len(dataset)))
+        vals = list(range(len(train_set)))
         np.random.shuffle(vals)
         for i, idx in enumerate(vals):
-            hidden = (torch.randn(2, 1, 128).cuda(),
-                      torch.randn(2, 1, 128).cuda())
+            hidden = (torch.randn(1, 1, 128).cuda(),
+                      torch.randn(1, 1, 128).cuda())
             optimizer.zero_grad()
-            inputs = dataset[idx][0][:-1]
-            target = dataset[idx][0][1:]
+            inputs = train_set[idx][0][:-1]
+            target = train_set[idx][0][1:]
             if len(inputs) == 0:
                 continue
+            # mean = torch.mean(inputs)
+            # if mean <= 0.2:
+            #     continue
             inputs = inputs.view(-1, 1, 1)
             target = target.view(-1, 1, 1)
-            pos_onehot = dataset[idx][1]
+            pos_onehot = train_set[idx][1]
             out = model(inputs, hidden, pos_onehot)
             loss = loss_function(out, target)
             losses.append(loss.item())
             loss.backward()
             if i % 100 == 0:
                 print("Loss:", loss.item())
-                print(out)
+                # print(out)
             optimizer.step()
         mean_loss = np.mean(losses)
-        print(f"Mean LOSS: {mean_loss}")
-    #     # amount sentences
+
+        total_epoch_train_losses.append(mean_loss)
+        print(f"Mean TRAIN LOSS: {mean_loss}")
+
+        # get testing losses
+        test_losses = []
+        for idx in range(len(test_set)):
+            hidden = (torch.randn(1, 1, 128).cuda(),
+                      torch.randn(1, 1, 128).cuda())
+            inputs = test_set[idx][0][:-1]
+            target = test_set[idx][0][1:]
+            if len(inputs) == 0:
+                continue
+            # mean = np.mean(inputs)
+            # if mean <= 0.2:
+            #     continue
+            inputs = inputs.view(-1, 1, 1)
+            target = target.view(-1, 1, 1)
+            pos_onehot = train_set[idx][1]
+            out = model(inputs, hidden, pos_onehot)
+            loss = loss_function(out, target)
+            test_losses.append(loss.item())
+        test_mean = np.mean(test_losses)
+        total_epoch_test_losses.append(test_mean)
+        print(f'TEST LOSS: {test_mean}')
+    np.savetxt('train_loss2.txt', np.array(total_epoch_train_losses))
+    np.savetxt('test_loss2.txt', np.array(total_epoch_test_losses))
 

@@ -4,11 +4,12 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
+
 class FantasyFootballDataset(Dataset):
     """
     dataset for fantasy football data.
     """
-    def __init__(self, csv, normalize=True):
+    def __init__(self, csv, normalize=True, optimize_separately=True, verbose=False):
         # get the list of directories
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # over 30k entries long of player seasons
@@ -20,8 +21,9 @@ class FantasyFootballDataset(Dataset):
         sorted_df = correct_df.sort_values(['Player', 'Year'])
         self.df = sorted_df.dropna()
         ppg = 'FantPtPerGame'
+        self.verbose = verbose
         self.pos_mapping = {}
-
+        self.optimize_separately = optimize_separately
         self.player_names = np.unique(self.df['Player'].values)
 
         for idx, position in enumerate(self.correct_positions):
@@ -45,15 +47,18 @@ class FantasyFootballDataset(Dataset):
             nums.append(row['FantPtPerGame'])
             one_hot[self.pos_mapping[position]] = 1.0
             res.append(row['FantPtPerGame'])
-        plt.plot(nums, c='green')
-        plt.title(f'{position}: {player_name}')
-        plt.show()
+        if self.verbose:
+            plt.plot(nums, c='green')
+            plt.title(f'{position}: {player_name}')
+            plt.show()
         """
         data needed for net:
         position, name, games FantPtPerGame
 
         """
-        return torch.Tensor(res).to(self.device), torch.Tensor(one_hot).to(self.device)
+        if self.optimize_separately:
 
-
-data = FantasyFootballDataset('finalized_players.csv', False)
+            return torch.Tensor(res).to(self.device), torch.Tensor(one_hot).to(self.device)
+        else:
+            res.extend(one_hot)
+            return torch.Tensor(res).to(self.device)
