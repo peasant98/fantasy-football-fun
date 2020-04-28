@@ -35,7 +35,7 @@ class FantasyFootballTrainer():
             self.model = AdvancedFantasyFootballLSTM(1, 128)
         self.model.to(self.device)
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.01)
         if loss_fnc == "mse":
             self.loss_fnc = nn.MSELoss()
         else:
@@ -90,7 +90,7 @@ class FantasyFootballTrainer():
                           torch.randn(1, 1, 128).cuda())
                 inputs = self.test_set[idx][0][:-1]
                 target = self.test_set[idx][0][1:]
-                if len(inputs) == 0:
+                if len(inputs) <= 3:
                     continue
                 # mean = np.mean(inputs)
                 # if mean <= 0.2:

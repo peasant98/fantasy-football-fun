@@ -25,7 +25,6 @@ class FantasyFootballDataset(Dataset):
         self.verbose = verbose
         self.pos_mapping = {}
         self.optimize_separately = optimize_separately
-        self.player_names = np.unique(self.df['Player'].values)
 
         for idx, position in enumerate(self.correct_positions):
             self.pos_mapping[position] = idx
@@ -37,6 +36,10 @@ class FantasyFootballDataset(Dataset):
                 f = lambda x: (x - x.mean()) / x.std()
             else:
                 f = lambda x: (x - x.min()) / (x.max() - x.min())
+            self.df = self.df[(self.df['FantPtPerGame'] > 0)]
+            self.min = np.min(self.df[ppg].values)
+            self.max = np.max(self.df[ppg].values)
+            self.player_names = np.unique(self.df['Player'].values)
             self.df[cols_to_norm] = self.df[cols_to_norm].apply(f)
 
     def __len__(self):
