@@ -9,7 +9,8 @@ class FantasyFootballDataset(Dataset):
     """
     dataset for fantasy football data.
     """
-    def __init__(self, csv, normalize=True, optimize_separately=True, verbose=False):
+    def __init__(self, csv, normalize=True, optimize_separately=True, verbose=False,
+                 gaussian=False):
         # get the list of directories
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # over 30k entries long of player seasons
@@ -31,7 +32,12 @@ class FantasyFootballDataset(Dataset):
 
         if normalize:
             cols_to_norm = [ppg]
-            self.df[cols_to_norm] = self.df[cols_to_norm].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
+            if gaussian:
+                # not recommended
+                f = lambda x: (x - x.mean()) / x.std()
+            else:
+                f = lambda x: (x - x.min()) / (x.max() - x.min())
+            self.df[cols_to_norm] = self.df[cols_to_norm].apply(f)
 
     def __len__(self):
         return len(self.player_names)
